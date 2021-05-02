@@ -5,6 +5,9 @@ public class Student
     public String FirstName;
     public String LastName;
     public String Patronymic;
-    public ExamsScore Score;
+    public byte MathScore;
+    public byte RussianScore;
+    public byte PhysicsScore;
+    public byte EnglishScore;
 
 }
