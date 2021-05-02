@@ -1,4 +1,3 @@
-import Frames.JFrameTest;
 import Frames.SplashScreen;
 
 public class Main
