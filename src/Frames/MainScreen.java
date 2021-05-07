@@ -1,44 +1,63 @@
 package Frames;
 
+import DAL.StudentCSVRepository;
+import Model.ColumnForSort;
 import Model.Student;
 import TableModels.StudentTableModel;
+import Util.FileHandler;
+import Util.Sorter;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class MainScreen extends JFrame
 {
     private JMenuBar menuBar;
     private ArrayList<Student> students;
-    MainScreen()
-    {
-        menuBar = new JMenuBar();
-        students = new ArrayList<Student>();
-        {
-            var s1 = new Student();
-            s1.EnglishScore = 100;
-            s1.FirstName = "Nikita";
-            s1.LastName = "Bodry";
-            s1.Patronymic = "Sergeevich";
-            s1.MathScore = 110;
-            s1.PhysicsScore = 120;
-            s1.RussianScore = 0;
-            students.add(s1);
 
-            var s2 = new Student();
-            s2.EnglishScore = 100;
-            s2.FirstName = "Dima";
-            s2.LastName = "Urbanov";
-            s2.Patronymic = "Albertovich";
-            s2.MathScore = 0;
-            s2.PhysicsScore = 0;
-            s2.RussianScore = 0;
-            students.add(s2);
-        }
+    private JTextField mathScoreTextBox;
+    private JTextField physicsScoreTextBox;
+    private JTextField russianScoreTextBox;
+
+    private JTextField lastNameTextBox;
+    private JTextField firstNameTextBox;
+    private JTextField patronymicTextBox;
+
+    private JButton deleteButton;
+    private JButton editButton;
+    private JButton createButton;
+
+    private StudentCSVRepository repository;
+    private JTable table;
+    private JButton dropSelectionButton;
+    private JButton sortButton;
+    private JComboBox sortComboBox;
+
+    FileHandler fileHandler;
+
+    private JMenuItem newMenuItem;
+    private JMenuItem openMenuItem;
+    private JMenuItem saveMenuItem;
+    private JMenuItem saveAsMenuItem;
+
+
+    MainScreen(String title)
+    {
+        repository = new StudentCSVRepository();
+        repository.setFilePath("1.csv");
+
+        menuBar = new JMenuBar();
+        students = repository.GetAll();
+
 
 
         setResizable(false);
+        setTitle(title);
         setSize(800, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,39 +68,157 @@ public class MainScreen extends JFrame
 
         var panel1 = createInputInitialsPanel();
         add(panel1);
-        panel1.setBounds(20,10,400,100);
-        panel1.setBorder(BorderFactory.createLineBorder(Color.darkGray));
 
         var panel2 = createInputScorePanel();
         add(panel2);
-        panel2.setBounds(20,115,200,110);
-        panel2.setBorder(BorderFactory.createLineBorder(Color.darkGray));
 
         var panel3 = createButtonsPanel();
         add(panel3);
-        panel3.setBounds(230,115,190,110);
-        panel3.setBorder(BorderFactory.createLineBorder(Color.darkGray));
+
+        var panel4 = createSortPanel();
+        add(panel4);
+
 
         menuBar.add(createFileMenuBar());
         menuBar.add(createHelpMenuBar());
         setJMenuBar(menuBar);
         setVisible(true);
+
+        initActionListeners();
+        fileHandler = new FileHandler(this);
+    }
+    private void initActionListeners()
+    {
+        createButton.addActionListener(e -> buttonCreateClick(e));
+        deleteButton.addActionListener(e -> buttonDeleteClick(e));
+        editButton.addActionListener(e -> buttonEditClick(e));
+        dropSelectionButton.addActionListener(e -> buttonDropSelectionClick(e));
+        sortButton.addActionListener(e -> buttonSortClick(e));
+        saveAsMenuItem.addActionListener(e -> fileHandler.saveAsFileDialog());
+        openMenuItem.addActionListener(e -> fileHandler.openFileDialog());
+
+
+        var keyAdapterRestricted = new KeyAdapter()
+        {
+            public void keyTyped(KeyEvent e)
+            {
+                char c = e.getKeyChar();
+                var length = ((JTextField)e.getSource()).getText().length();
+                if (!Character.isDigit(c) || length >= 3) { e.consume();}
+            }
+        };
+
+        mathScoreTextBox.addKeyListener(keyAdapterRestricted);
+        russianScoreTextBox.addKeyListener(keyAdapterRestricted);
+        physicsScoreTextBox.addKeyListener(keyAdapterRestricted);
+
+        ListSelectionModel selectionModel = table.getSelectionModel();
+        selectionModel.addListSelectionListener(e -> handleSelectionEvent(e));
+
+
+    }
+
+    private void buttonSortClick(ActionEvent e)
+    {
+        Sorter.SortByScore(students);
+        table.updateUI();
+    }
+
+    private void handleSelectionEvent(ListSelectionEvent e)
+    {
+        var selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0)
+        {
+            firstNameTextBox.setText(table.getValueAt(selectedRow, 0).toString());
+            lastNameTextBox.setText(table.getValueAt(selectedRow, 1).toString());
+            patronymicTextBox.setText(table.getValueAt(selectedRow, 2).toString());
+            mathScoreTextBox.setText(table.getValueAt(selectedRow, 3).toString());
+            russianScoreTextBox.setText(table.getValueAt(selectedRow, 4).toString());
+            physicsScoreTextBox.setText(table.getValueAt(selectedRow, 5).toString());
+        }
+    }
+    private Student createStudentByTextBoxes()
+    {
+        var student = new Student();
+        student.FirstName = firstNameTextBox.getText();
+        student.LastName = lastNameTextBox.getText();
+        student.Patronymic = patronymicTextBox.getText();
+        student.MathScore = Integer.parseInt(mathScoreTextBox.getText());
+        student.PhysicsScore = Integer.parseInt(physicsScoreTextBox.getText());
+        student.RussianScore = Integer.parseInt(russianScoreTextBox.getText());
+        return student;
+    }
+    private void buttonCreateClick(ActionEvent e)
+    {
+        students.add(createStudentByTextBoxes());
+        table.updateUI();
+    }
+    private void buttonEditClick(ActionEvent e)
+    {
+        var index = table.getSelectedRow();
+        students.set(index,createStudentByTextBoxes());
+        table.updateUI();
+    }
+    private void buttonDeleteClick(ActionEvent e)
+    {
+        var index = table.getSelectedRow();
+        students.remove(index);
+        table.updateUI();
+    }
+    private void buttonDropSelectionClick(ActionEvent e)
+    {
+        table.clearSelection();
+        firstNameTextBox.setText("");
+        lastNameTextBox.setText("");
+        patronymicTextBox.setText("");
+        mathScoreTextBox.setText("");
+        physicsScoreTextBox.setText("");
+        russianScoreTextBox.setText("");
+    }
+    //region UI_CREATION
+    private JPanel createSortPanel()
+    {
+        var panel = new JPanel(null);
+
+        sortButton = new JButton("Сортировать");
+        sortComboBox = new JComboBox(ColumnForSort.values());
+        var sortLabel = new JLabel("Сортировать \n по:");
+
+        sortLabel.setBounds(10,5,200,40);
+        sortComboBox.setBounds(10,55,200,30);
+        sortButton.setBounds(10,95,200,40);
+
+        panel.add(sortButton);
+        panel.add(sortComboBox);
+        panel.add(sortLabel);
+
+        panel.setBounds(430,10,220,215);
+        panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
+
+        return panel;
     }
     private JPanel createButtonsPanel()
     {
         var panel = new JPanel(null);
 
-        var createButton = new JButton("Создать");
-        var editButton = new JButton("Изменить");
-        var deleteButton = new JButton("Удалить");
+        createButton = new JButton("Создать");
+        editButton = new JButton("Изменить");
+        deleteButton = new JButton("Удалить");
 
         createButton.setBounds(10,5,170,30);
         editButton.setBounds(10,40,170,30);
         deleteButton.setBounds(10,75,170,30);
 
+        var repo = new StudentCSVRepository();
+        repo.setFilePath("1.csv");
+        createButton.addActionListener(e -> repo.Save(students));
+
         panel.add(createButton);
         panel.add(editButton);
         panel.add(deleteButton);
+
+        panel.setBounds(230,115,190,110);
+        panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
 
         return panel;
     }
@@ -89,35 +226,36 @@ public class MainScreen extends JFrame
     {
         var panel = new JPanel(null);
 
-        var mathScore = new JTextField(3);
-        var russianScore = new JTextField(3);
-        var physicsScore = new JTextField(3);
-        var englishScore = new JTextField(3);
+        mathScoreTextBox = new JTextField(3);
+        russianScoreTextBox = new JTextField(3);
+        physicsScoreTextBox = new JTextField(3);
+        dropSelectionButton = new JButton("Сбросить выделение");
 
         var mathScoreLabel = new JLabel("Математика");
         var russianScoreLabel = new JLabel("Русский");
         var physicsScoreLabel = new JLabel("Физика");
-        var englishScoreLabel = new JLabel("Английский");
 
-        mathScore.setBounds(5,5,50,20);
-        russianScore.setBounds(5,30,50,20);
-        physicsScore.setBounds(5,55,50,20);
-        englishScore.setBounds(5,80,50,20);
+        mathScoreTextBox.setBounds(5,5,50,20);
+        russianScoreTextBox.setBounds(5,30,50,20);
+        physicsScoreTextBox.setBounds(5,55,50,20);
+
 
         mathScoreLabel.setBounds(60,5,80,20);
         russianScoreLabel.setBounds(60,30,80,20);
         physicsScoreLabel.setBounds(60,55,80,20);
-        englishScoreLabel.setBounds(60,80,80,20);
+        dropSelectionButton.setBounds(5,80,180,20);
 
-        panel.add(mathScore);
-        panel.add(russianScore);
-        panel.add(physicsScore);
-        panel.add(englishScore);
+        panel.add(mathScoreTextBox);
+        panel.add(russianScoreTextBox);
+        panel.add(physicsScoreTextBox);
 
         panel.add(mathScoreLabel);
         panel.add(russianScoreLabel);
         panel.add(physicsScoreLabel);
-        panel.add(englishScoreLabel);
+        panel.add(dropSelectionButton);
+
+        panel.setBounds(20,115,200,110);//225
+        panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
 
         return panel;
     }
@@ -125,38 +263,42 @@ public class MainScreen extends JFrame
     {
         var panel = new JPanel(null);
 
-        var firstName = new JTextField(25);
-        var lastName = new JTextField(25);
-        var patronymic = new JTextField(25);
+        firstNameTextBox = new JTextField(25);
+        lastNameTextBox = new JTextField(25);
+        patronymicTextBox = new JTextField(25);
 
         var firstNameLabel = new JLabel("Имя");
         var lastNameLabel = new JLabel("Фамилия");
         var patronymicLabel = new JLabel("Отчество");
 
-        lastName.setBounds(5,5,200,25);
-        firstName.setBounds(5,35,200,25);
-        patronymic.setBounds(5,65,200,25);
+        lastNameTextBox.setBounds(5,5,200,25);
+        firstNameTextBox.setBounds(5,35,200,25);
+        patronymicTextBox.setBounds(5,65,200,25);
 
         lastNameLabel.setBounds(210,5,150,25);
         firstNameLabel.setBounds(210,35,150,25);
         patronymicLabel.setBounds(210,65,150,25);
 
-        panel.add(firstName);
-        panel.add(lastName);
-        panel.add(patronymic);
+        panel.add(firstNameTextBox);
+        panel.add(lastNameTextBox);
+        panel.add(patronymicTextBox);
 
         panel.add(firstNameLabel);
         panel.add(lastNameLabel);
         panel.add(patronymicLabel);
+
+        panel.setBounds(20,10,400,100);
+        panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
 
         return panel;
     }
     private JScrollPane createDataTable()
     {
         StudentTableModel model = new StudentTableModel(students);
-        JTable table = new JTable(model);
+        table = new JTable(model);
 
         table.getTableHeader().setResizingAllowed(false);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getColumnModel().getColumn(0).setPreferredWidth(150);
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.getColumnModel().getColumn(2).setPreferredWidth(150);
@@ -164,7 +306,6 @@ public class MainScreen extends JFrame
         table.getColumnModel().getColumn(4).setPreferredWidth(70);
         table.getColumnModel().getColumn(5).setPreferredWidth(70);
         table.getColumnModel().getColumn(6).setPreferredWidth(70);
-        table.getColumnModel().getColumn(7).setPreferredWidth(50);
         table.setFillsViewportHeight(true);
         table.getTableHeader().setBackground(new Color(155, 177, 205));
 
@@ -176,10 +317,10 @@ public class MainScreen extends JFrame
     {
         var fileMenu = new JMenu("Файл");
 
-        var newMenuItem = new JMenuItem("Новый");
-        var openMenuItem = new JMenuItem("Открыть");
-        var saveMenuItem = new JMenuItem("Сохранить");
-        var saveAsMenuItem = new JMenuItem("Сохранить как...");
+        newMenuItem = new JMenuItem("Новый");
+        openMenuItem = new JMenuItem("Открыть");
+        saveMenuItem = new JMenuItem("Сохранить");
+        saveAsMenuItem = new JMenuItem("Сохранить как...");
 
 
         fileMenu.add(newMenuItem);
@@ -203,4 +344,5 @@ public class MainScreen extends JFrame
 
         return helpMenu;
     }
+    //endregion
 }

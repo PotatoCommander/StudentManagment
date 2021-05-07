@@ -1,13 +1,18 @@
 package Model;
 
+import java.util.UUID;
+
 public class Student
 {
     public String FirstName;
     public String LastName;
     public String Patronymic;
-    public byte MathScore;
-    public byte RussianScore;
-    public byte PhysicsScore;
-    public byte EnglishScore;
-
+    public int MathScore;
+    public int RussianScore;
+    public int PhysicsScore;
+    public int getTotalScore()
+    {
+        return MathScore + RussianScore + PhysicsScore;
+    }
 }
+

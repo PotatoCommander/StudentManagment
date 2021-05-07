@@ -45,7 +45,7 @@ class SplashScreen extends JFrame
 
         jbtStart.addActionListener(e -> {
             dispose();
-            new MainScreen();
+            new MainScreen("Формирование списка абитуриентов");
         });
         jbtExit.addActionListener(e -> System.exit(EXIT_ON_CLOSE));
         add(new myComponent());

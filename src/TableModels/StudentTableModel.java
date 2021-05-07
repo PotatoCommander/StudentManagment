@@ -15,7 +15,7 @@ public class StudentTableModel extends AbstractTableModel
     {
         super();
         students = studentsList;
-        columns = new String[]{"Имя", "Фамилия", "Отчество", "Матем.", "Русский", "Физика", "Англ.язык", "Итог"};
+        columns = new String[]{"Имя", "Фамилия", "Отчество", "Матем.", "Русский", "Физика", "Итог"};
     }
 
     @Override
@@ -29,7 +29,6 @@ public class StudentTableModel extends AbstractTableModel
     {
         return students.size();
     }
-
     @Override
     public Object getValueAt(int row, int col)
     {
@@ -49,9 +48,7 @@ public class StudentTableModel extends AbstractTableModel
             case 5:
                 return student.PhysicsScore;
             case 6:
-                return student.EnglishScore;
-            case 7:
-                return student.MathScore+ student.PhysicsScore+ student.RussianScore+ student.EnglishScore;
+                return student.MathScore+ student.PhysicsScore+ student.RussianScore;
             default:
                 return null;
         }
