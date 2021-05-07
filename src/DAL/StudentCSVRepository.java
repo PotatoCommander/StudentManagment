@@ -11,7 +11,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -22,14 +26,16 @@ public class StudentCSVRepository implements Observable
 {
     private ArrayList<Observer> observers;
     private String filePath;
+    SimpleDateFormat sdf;
     public void setFilePath(String path)
     {
         this.filePath = path;
     }
-    private String[] header = {"FirstName", "LastName", "Patronymic", "MathScore", "RussianScore", "PhysicsScore"};
+    private String[] header = {"FirstName", "LastName", "Patronymic","DateOfBirth", "MathScore", "RussianScore", "PhysicsScore"};
 
     public StudentCSVRepository()
     {
+        sdf = new SimpleDateFormat("dd-MM-yyyy");
         observers = new ArrayList<>();
         filePath = null;
     }
@@ -51,6 +57,7 @@ public class StudentCSVRepository implements Observable
                 var firstName = csvRecord.get("FirstName");
                 var lastName = csvRecord.get("LastName");
                 var patronymic = csvRecord.get("Patronymic");
+                var dateOfBirth = csvRecord.get("DateOfBirth");
                 var mathScore = Integer.parseInt(csvRecord.get("MathScore"));
                 var russianScore = Integer.parseInt(csvRecord.get("RussianScore"));
                 var physicsScore = Integer.parseInt(csvRecord.get("PhysicsScore"));
@@ -63,12 +70,14 @@ public class StudentCSVRepository implements Observable
                 student.MathScore = mathScore;
                 student.RussianScore = russianScore;
                 student.PhysicsScore = physicsScore;
+                student.DateOfBirth.setTime(sdf.parse(dateOfBirth));
 
                 students.add(student);
             }
         }
-        catch (IOException e)
+        catch (IOException | ParseException e)
         {
+            e.printStackTrace();
         }
         return students;
     }
@@ -82,6 +91,7 @@ public class StudentCSVRepository implements Observable
             for (Student item : items)
             {
                 csvPrinter.printRecord(item.FirstName, item.LastName, item.Patronymic,
+                        sdf.format(item.DateOfBirth.getTime()),
                         item.MathScore, item.PhysicsScore, item.RussianScore);
             }
             csvPrinter.flush();

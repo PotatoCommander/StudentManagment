@@ -1,18 +1,16 @@
 package Model;
 
-public  enum ColumnForSort
+public  enum Sort
 {
-    MATH("Математика"),
-    PHYSICS("Физика"),
-    RUSSIAN("Русский"),
     FIRST_NAME("Имя"),
     LAST_NAME("Фамилия"),
     PATRONYMIC("Отчество"),
+    SCORE("Сумма баллов"),
     DATE_OF_BIRTH("Дата рождения");
 
     private final String text;
 
-    ColumnForSort(final String text)
+    Sort(final String text)
     {
         this.text = text;
     }

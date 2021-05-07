@@ -2,12 +2,14 @@ package Frames;
 
 import DAL.StudentCSVRepository;
 import Model.Abstraction.Observable;
-import Model.ColumnForSort;
+import Model.Adapters;
+import Model.Sort;
 import Model.CustomLists.ObservableList;
 import Model.Abstraction.Observer;
 import Model.Student;
 import TableModels.StudentTableModel;
 import Util.FileHandler;
+import Util.KeyAdapterFactory;
 import Util.Sorter;
 
 import javax.swing.*;
@@ -16,8 +18,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class MainScreen extends JFrame implements Observer
 {
@@ -50,6 +52,9 @@ public class MainScreen extends JFrame implements Observer
     private JMenuItem saveAsMenuItem;
 
     private boolean isSaved;
+    private JTextField dayTextBox;
+    private JTextField monthTextBox;
+    private JTextField yearTextBox;
 
 
     MainScreen(String title)
@@ -113,19 +118,16 @@ public class MainScreen extends JFrame implements Observer
                     }
                 });
 
-        var keyAdapterRestricted = new KeyAdapter()
-        {
-            public void keyTyped(KeyEvent e)
-            {
-                char c = e.getKeyChar();
-                var length = ((JTextField)e.getSource()).getText().length();
-                if (!Character.isDigit(c) || length >= 3) { e.consume();}
-            }
-        };
 
-        mathScoreTextBox.addKeyListener(keyAdapterRestricted);
-        russianScoreTextBox.addKeyListener(keyAdapterRestricted);
-        physicsScoreTextBox.addKeyListener(keyAdapterRestricted);
+
+        dayTextBox.addKeyListener(KeyAdapterFactory.getDateRestrictedAdapter(Adapters.DAY_OF_MONTH_ADAPTER));
+        monthTextBox.addKeyListener(KeyAdapterFactory.getDateRestrictedAdapter(Adapters.MONTH_ADAPTER));
+        yearTextBox.addKeyListener(KeyAdapterFactory.getDateRestrictedAdapter(Adapters.YEAR_ADAPTER));
+
+        var scoreAdapter = KeyAdapterFactory.getDigitsRestrictedAdapter(3);
+        mathScoreTextBox.addKeyListener(scoreAdapter);
+        russianScoreTextBox.addKeyListener(scoreAdapter);
+        physicsScoreTextBox.addKeyListener(scoreAdapter);
 
 
     }
@@ -160,7 +162,8 @@ public class MainScreen extends JFrame implements Observer
     }
     private void handleButtonSortClickEvent(ActionEvent e)
     {
-        Sorter.SortByScore(students);
+        var selected = (Sort) sortComboBox.getSelectedItem();
+        Sorter.SortBy(students, Sort.valueOf(selected.name()));
         table.updateUI();
     }
     private void handleSelectionEvent(ListSelectionEvent e)
@@ -171,9 +174,15 @@ public class MainScreen extends JFrame implements Observer
             firstNameTextBox.setText(table.getValueAt(selectedRow, 0).toString());
             lastNameTextBox.setText(table.getValueAt(selectedRow, 1).toString());
             patronymicTextBox.setText(table.getValueAt(selectedRow, 2).toString());
-            mathScoreTextBox.setText(table.getValueAt(selectedRow, 3).toString());
-            russianScoreTextBox.setText(table.getValueAt(selectedRow, 4).toString());
-            physicsScoreTextBox.setText(table.getValueAt(selectedRow, 5).toString());
+            {
+                var s = students.get(selectedRow);
+                dayTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.DAY_OF_MONTH)));
+                monthTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.MONTH)));
+                yearTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.YEAR)));
+            }
+            mathScoreTextBox.setText(table.getValueAt(selectedRow, 4).toString());
+            russianScoreTextBox.setText(table.getValueAt(selectedRow, 5).toString());
+            physicsScoreTextBox.setText(table.getValueAt(selectedRow, 6).toString());
         }
     }
     private void handleButtonCreateClickEvent(ActionEvent e)
@@ -201,6 +210,9 @@ public class MainScreen extends JFrame implements Observer
         mathScoreTextBox.setText("");
         physicsScoreTextBox.setText("");
         russianScoreTextBox.setText("");
+        dayTextBox.setText("");
+        monthTextBox.setText("");
+        yearTextBox.setText("");
     }
     //endregion
     private Student createStudentByTextBoxes()
@@ -212,6 +224,11 @@ public class MainScreen extends JFrame implements Observer
         student.MathScore = Integer.parseInt(mathScoreTextBox.getText());
         student.PhysicsScore = Integer.parseInt(physicsScoreTextBox.getText());
         student.RussianScore = Integer.parseInt(russianScoreTextBox.getText());
+        var day = Integer.parseInt(dayTextBox.getText());
+        var month = Integer.parseInt(monthTextBox.getText());
+        var year = Integer.parseInt(yearTextBox.getText());
+        student.DateOfBirth = new GregorianCalendar(year,month - 1,day);
+
         return student;
     }
     //region UI_CREATION
@@ -220,7 +237,7 @@ public class MainScreen extends JFrame implements Observer
         var panel = new JPanel(null);
 
         sortButton = new JButton("Сортировать");
-        sortComboBox = new JComboBox(ColumnForSort.values());
+        sortComboBox = new JComboBox(Sort.values());
         var sortLabel = new JLabel("Сортировать \n по:");
 
         sortLabel.setBounds(10,5,200,40);
@@ -302,25 +319,49 @@ public class MainScreen extends JFrame implements Observer
         lastNameTextBox = new JTextField(25);
         patronymicTextBox = new JTextField(25);
 
+        dayTextBox = new JTextField(4);
+        monthTextBox = new JTextField(4);
+        yearTextBox = new JTextField(4);
+
         var firstNameLabel = new JLabel("Имя");
         var lastNameLabel = new JLabel("Фамилия");
         var patronymicLabel = new JLabel("Отчество");
+
+        var dayLabel = new JLabel("День");
+        var monthLabel = new JLabel("Месяц");
+        var yearLabel = new JLabel("Год");
 
         lastNameTextBox.setBounds(5,5,200,25);
         firstNameTextBox.setBounds(5,35,200,25);
         patronymicTextBox.setBounds(5,65,200,25);
 
-        lastNameLabel.setBounds(210,5,150,25);
-        firstNameLabel.setBounds(210,35,150,25);
-        patronymicLabel.setBounds(210,65,150,25);
+        dayTextBox.setBounds(285,5,50,25);
+        monthTextBox.setBounds(285,35,50,25);
+        yearTextBox.setBounds(285,65,50,25);
+
+        lastNameLabel.setBounds(210,5,70,25);
+        firstNameLabel.setBounds(210,35,70,25);
+        patronymicLabel.setBounds(210,65,70,25);
+
+        dayLabel.setBounds(345,5,50,25);
+        monthLabel.setBounds(345,35,50,25);
+        yearLabel.setBounds(345,65,70,25);
 
         panel.add(firstNameTextBox);
         panel.add(lastNameTextBox);
         panel.add(patronymicTextBox);
 
+        panel.add(yearTextBox);
+        panel.add(monthTextBox);
+        panel.add(dayTextBox);
+
         panel.add(firstNameLabel);
         panel.add(lastNameLabel);
         panel.add(patronymicLabel);
+
+        panel.add(yearLabel);
+        panel.add(monthLabel);
+        panel.add(dayLabel);
 
         panel.setBounds(20,10,400,100);
         panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
@@ -334,13 +375,14 @@ public class MainScreen extends JFrame implements Observer
 
         table.getTableHeader().setResizingAllowed(false);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getColumnModel().getColumn(0).setPreferredWidth(150);
-        table.getColumnModel().getColumn(1).setPreferredWidth(150);
-        table.getColumnModel().getColumn(2).setPreferredWidth(150);
-        table.getColumnModel().getColumn(3).setPreferredWidth(50);
-        table.getColumnModel().getColumn(4).setPreferredWidth(70);
-        table.getColumnModel().getColumn(5).setPreferredWidth(70);
-        table.getColumnModel().getColumn(6).setPreferredWidth(70);
+        table.getColumnModel().getColumn(0).setPreferredWidth(120);
+        table.getColumnModel().getColumn(1).setPreferredWidth(120);
+        table.getColumnModel().getColumn(2).setPreferredWidth(120);
+        table.getColumnModel().getColumn(3).setPreferredWidth(120);
+        table.getColumnModel().getColumn(4).setPreferredWidth(50);
+        table.getColumnModel().getColumn(5).setPreferredWidth(50);
+        table.getColumnModel().getColumn(6).setPreferredWidth(50);
+        table.getColumnModel().getColumn(7).setPreferredWidth(50);
         table.setFillsViewportHeight(true);
         table.getTableHeader().setBackground(new Color(155, 177, 205));
 

@@ -4,6 +4,7 @@ import Model.Student;
 
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class StudentTableModel extends AbstractTableModel
@@ -15,7 +16,7 @@ public class StudentTableModel extends AbstractTableModel
     {
         super();
         students = studentsList;
-        columns = new String[]{"Имя", "Фамилия", "Отчество", "Матем.", "Русский", "Физика", "Итог"};
+        columns = new String[]{"Имя", "Фамилия", "Отчество","Дата рождения", "Матем.", "Русский", "Физика", "Итог"};
     }
 
     @Override
@@ -42,12 +43,15 @@ public class StudentTableModel extends AbstractTableModel
             case 2:
                 return student.Patronymic;
             case 3:
-                return student.MathScore;
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                return sdf.format(student.DateOfBirth.getTime());
             case 4:
-                return student.RussianScore;
+                return student.MathScore;
             case 5:
-                return student.PhysicsScore;
+                return student.RussianScore;
             case 6:
+                return student.PhysicsScore;
+            case 7:
                 return student.MathScore+ student.PhysicsScore+ student.RussianScore;
             default:
                 return null;
