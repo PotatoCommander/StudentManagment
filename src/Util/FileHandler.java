@@ -5,6 +5,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 
 public class FileHandler
 {
@@ -25,7 +26,9 @@ public class FileHandler
         if (result == JFileChooser.APPROVE_OPTION)
         {
             File selectedFile = fileChooser.getSelectedFile();
-            return selectedFile.getAbsolutePath();
+            var path = selectedFile.getAbsolutePath();
+            if (!path.toLowerCase().endsWith( ".csv" )) path += ".csv";
+            return path;
         }
         return null;
     }
@@ -36,7 +39,22 @@ public class FileHandler
         if (result == JFileChooser.APPROVE_OPTION)
         {
             File fileToSave = fileChooser.getSelectedFile();
-            return fileToSave.getAbsolutePath();
+            var path = fileToSave.getAbsolutePath();
+            if (!path.toLowerCase().endsWith( ".csv" )) path += ".csv";
+            return path;
+        }
+        return null;
+    }
+    public String newFileDialog()
+    {
+        fileChooser.setDialogTitle("Создать новый файл...");
+        int result = fileChooser.showSaveDialog(parent);
+        if (result == JFileChooser.APPROVE_OPTION)
+        {
+            File fileToSave = fileChooser.getSelectedFile();
+            var path = fileToSave.getAbsolutePath();
+            if (!path.toLowerCase().endsWith( ".csv" )) path += ".csv";
+            return path;
         }
         return null;
     }

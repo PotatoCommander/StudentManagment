@@ -1,22 +1,26 @@
 package DAL;
 
+import Model.Abstraction.Observable;
+import Model.Abstraction.Observer;
+import Model.CustomLists.ObservableList;
 import Model.Student;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
-public class StudentCSVRepository
+public class StudentCSVRepository implements Observable
 {
+    private ArrayList<Observer> observers;
     private String filePath;
     public void setFilePath(String path)
     {
@@ -26,12 +30,13 @@ public class StudentCSVRepository
 
     public StudentCSVRepository()
     {
+        observers = new ArrayList<>();
         filePath = null;
     }
 
-    public ArrayList<Student> GetAll()
+    public ObservableList<Student> GetAll()
     {
-        var students = new ArrayList<Student>();
+        var students = new ObservableList<Student>();
         try
         {
             Reader reader = Files.newBufferedReader(Paths.get(filePath));
@@ -68,25 +73,77 @@ public class StudentCSVRepository
         return students;
     }
 
-    public void Save(ArrayList<Student> items)
+    public boolean Save(ObservableList<Student> items)
     {
         try
         {
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath));
-
             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(header));
-            for (Student item: items)
+            for (Student item : items)
             {
-                csvPrinter.printRecord(item.FirstName,item.LastName, item.Patronymic,
+                csvPrinter.printRecord(item.FirstName, item.LastName, item.Patronymic,
                         item.MathScore, item.PhysicsScore, item.RussianScore);
             }
             csvPrinter.flush();
+            NotifyObservers();
+            return true;
         }
         catch (IOException e)
         {
-
+            System.out.println(e.getMessage());
+            return false;
         }
+    }
+    public boolean SaveAs(ObservableList<Student> items)
+    {
+        File file = new File(filePath);
+        if (!isFileExist(file))
+        {
+            if(!CreateFile()) return false;
+        }
+        return Save(items);
+    }
+    public boolean CreateFile()
+    {
+        try
+        {
+            File file = new File(filePath);
+            return file.createNewFile();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+    private boolean isFileExist(File file)
+    {
+        return file.exists() || !file.isDirectory();
     }
 
 
+
+    @Override
+    public void AddObserver(Observer observer)
+    {
+        observers.add(observer);
+    }
+
+    @Override
+    public void RemoveObserver(Observer observer)
+    {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void NotifyObservers()
+    {
+        if (observers != null)
+        {
+            for (Observer observer : observers)
+            {
+                observer.Update(this);
+            }
+        }
+    }
 }

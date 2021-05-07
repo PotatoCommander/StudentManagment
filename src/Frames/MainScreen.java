@@ -1,7 +1,10 @@
 package Frames;
 
 import DAL.StudentCSVRepository;
+import Model.Abstraction.Observable;
 import Model.ColumnForSort;
+import Model.CustomLists.ObservableList;
+import Model.Abstraction.Observer;
 import Model.Student;
 import TableModels.StudentTableModel;
 import Util.FileHandler;
@@ -9,16 +12,17 @@ import Util.Sorter;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
 
-public class MainScreen extends JFrame
+public class MainScreen extends JFrame implements Observer
 {
     private JMenuBar menuBar;
-    private ArrayList<Student> students;
+    private ObservableList<Student> students;
 
     private JTextField mathScoreTextBox;
     private JTextField physicsScoreTextBox;
@@ -45,15 +49,17 @@ public class MainScreen extends JFrame
     private JMenuItem saveMenuItem;
     private JMenuItem saveAsMenuItem;
 
+    private boolean isSaved;
+
 
     MainScreen(String title)
     {
+        isSaved = false;
         repository = new StudentCSVRepository();
-        repository.setFilePath("1.csv");
-
+        repository.AddObserver(this);
         menuBar = new JMenuBar();
-        students = repository.GetAll();
-
+        students = new ObservableList<Student>();
+        students.AddObserver(this);
 
 
         setResizable(false);
@@ -65,19 +71,14 @@ public class MainScreen extends JFrame
 
         var dataTable = createDataTable();
         add(dataTable);
-
-        var panel1 = createInputInitialsPanel();
-        add(panel1);
-
-        var panel2 = createInputScorePanel();
-        add(panel2);
-
-        var panel3 = createButtonsPanel();
-        add(panel3);
-
-        var panel4 = createSortPanel();
-        add(panel4);
-
+        var inputInitials = createInputInitialsPanel();
+        add(inputInitials);
+        var inputScorePanel = createInputScorePanel();
+        add(inputScorePanel);
+        var buttonsPanel = createButtonsPanel();
+        add(buttonsPanel);
+        var sortPanel = createSortPanel();
+        add(sortPanel);
 
         menuBar.add(createFileMenuBar());
         menuBar.add(createHelpMenuBar());
@@ -89,14 +90,28 @@ public class MainScreen extends JFrame
     }
     private void initActionListeners()
     {
-        createButton.addActionListener(e -> buttonCreateClick(e));
-        deleteButton.addActionListener(e -> buttonDeleteClick(e));
-        editButton.addActionListener(e -> buttonEditClick(e));
-        dropSelectionButton.addActionListener(e -> buttonDropSelectionClick(e));
-        sortButton.addActionListener(e -> buttonSortClick(e));
-        saveAsMenuItem.addActionListener(e -> fileHandler.saveAsFileDialog());
-        openMenuItem.addActionListener(e -> fileHandler.openFileDialog());
+        createButton.addActionListener(e -> handleButtonCreateClickEvent(e));
+        deleteButton.addActionListener(e -> handleButtonDeleteClickEvent(e));
+        editButton.addActionListener(e -> handleButtonEditClickEvent(e));
+        dropSelectionButton.addActionListener(e -> handleButtonDropSelectionClickEvent(e));
+        sortButton.addActionListener(e -> handleButtonSortClickEvent(e));
 
+        saveAsMenuItem.addActionListener(e -> handleSaveAsClickEvent(e));
+        openMenuItem.addActionListener(e -> handleOpenClickEvent(e));
+        saveMenuItem.addActionListener(e -> handleSaveClickEvent(e));
+        newMenuItem.addActionListener(e -> handleNewClickEvent(e));
+
+        ListSelectionModel selectionModel = table.getSelectionModel();
+        selectionModel.addListSelectionListener(e -> handleSelectionEvent(e));
+
+        table.getModel().addTableModelListener(
+                new TableModelListener()
+                {
+                    public void tableChanged(TableModelEvent e)
+                    {
+                        isSaved = false;
+                    }
+                });
 
         var keyAdapterRestricted = new KeyAdapter()
         {
@@ -112,18 +127,42 @@ public class MainScreen extends JFrame
         russianScoreTextBox.addKeyListener(keyAdapterRestricted);
         physicsScoreTextBox.addKeyListener(keyAdapterRestricted);
 
-        ListSelectionModel selectionModel = table.getSelectionModel();
-        selectionModel.addListSelectionListener(e -> handleSelectionEvent(e));
-
 
     }
 
-    private void buttonSortClick(ActionEvent e)
+    //region EVENT_HANDLERS
+    private void handleNewClickEvent(ActionEvent e)
+    {
+        var filepath = fileHandler.newFileDialog();
+        repository.setFilePath(filepath);
+        repository.CreateFile();
+        students.clear();
+    }
+
+    private void handleSaveClickEvent(ActionEvent e)
+    {
+        repository.Save(students);
+    }
+
+    private void handleOpenClickEvent(ActionEvent e)
+    {
+        var filepath = fileHandler.openFileDialog();
+        repository.setFilePath(filepath);
+        students.clear();
+        students.addAll(repository.GetAll());
+    }
+
+    private void handleSaveAsClickEvent(ActionEvent e)
+    {
+        var filepath = fileHandler.saveAsFileDialog();
+        repository.setFilePath(filepath);
+        repository.SaveAs(students);
+    }
+    private void handleButtonSortClickEvent(ActionEvent e)
     {
         Sorter.SortByScore(students);
         table.updateUI();
     }
-
     private void handleSelectionEvent(ListSelectionEvent e)
     {
         var selectedRow = table.getSelectedRow();
@@ -137,6 +176,33 @@ public class MainScreen extends JFrame
             physicsScoreTextBox.setText(table.getValueAt(selectedRow, 5).toString());
         }
     }
+    private void handleButtonCreateClickEvent(ActionEvent e)
+    {
+        students.add(createStudentByTextBoxes());
+    }
+
+    private void handleButtonEditClickEvent(ActionEvent e)
+    {
+        var index = table.getSelectedRow();
+        students.set(index,createStudentByTextBoxes());
+    }
+    private void handleButtonDeleteClickEvent(ActionEvent e)
+    {
+        var index = table.getSelectedRow();
+        students.remove(index);
+        table.updateUI();
+    }
+    private void handleButtonDropSelectionClickEvent(ActionEvent e)
+    {
+        table.clearSelection();
+        firstNameTextBox.setText("");
+        lastNameTextBox.setText("");
+        patronymicTextBox.setText("");
+        mathScoreTextBox.setText("");
+        physicsScoreTextBox.setText("");
+        russianScoreTextBox.setText("");
+    }
+    //endregion
     private Student createStudentByTextBoxes()
     {
         var student = new Student();
@@ -147,33 +213,6 @@ public class MainScreen extends JFrame
         student.PhysicsScore = Integer.parseInt(physicsScoreTextBox.getText());
         student.RussianScore = Integer.parseInt(russianScoreTextBox.getText());
         return student;
-    }
-    private void buttonCreateClick(ActionEvent e)
-    {
-        students.add(createStudentByTextBoxes());
-        table.updateUI();
-    }
-    private void buttonEditClick(ActionEvent e)
-    {
-        var index = table.getSelectedRow();
-        students.set(index,createStudentByTextBoxes());
-        table.updateUI();
-    }
-    private void buttonDeleteClick(ActionEvent e)
-    {
-        var index = table.getSelectedRow();
-        students.remove(index);
-        table.updateUI();
-    }
-    private void buttonDropSelectionClick(ActionEvent e)
-    {
-        table.clearSelection();
-        firstNameTextBox.setText("");
-        lastNameTextBox.setText("");
-        patronymicTextBox.setText("");
-        mathScoreTextBox.setText("");
-        physicsScoreTextBox.setText("");
-        russianScoreTextBox.setText("");
     }
     //region UI_CREATION
     private JPanel createSortPanel()
@@ -208,10 +247,6 @@ public class MainScreen extends JFrame
         createButton.setBounds(10,5,170,30);
         editButton.setBounds(10,40,170,30);
         deleteButton.setBounds(10,75,170,30);
-
-        var repo = new StudentCSVRepository();
-        repo.setFilePath("1.csv");
-        createButton.addActionListener(e -> repo.Save(students));
 
         panel.add(createButton);
         panel.add(editButton);
@@ -343,6 +378,20 @@ public class MainScreen extends JFrame
         helpMenu.add(aboutProgramButton);
 
         return helpMenu;
+    }
+
+    @Override
+    public void Update(Observable source)
+    {
+        if (source instanceof ObservableList)
+        {
+            isSaved = false;
+            table.updateUI();
+        }
+        else if (source instanceof StudentCSVRepository)
+        {
+            isSaved = true;
+        }
     }
     //endregion
 }
