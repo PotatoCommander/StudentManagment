@@ -32,6 +32,12 @@ public class StudentCSVRepository implements Observable
         this.filePath = path;
     }
     private String[] header = {"FirstName", "LastName", "Patronymic","DateOfBirth", "MathScore", "RussianScore", "PhysicsScore"};
+    private String lastOperation;
+
+    public String getLastOperation()
+    {
+        return lastOperation;
+    }
 
     public StudentCSVRepository()
     {
@@ -74,10 +80,16 @@ public class StudentCSVRepository implements Observable
 
                 students.add(student);
             }
+            lastOperation = "Извлечен список из файла";
         }
         catch (IOException | ParseException e)
         {
+            lastOperation = "Не удалось открыть файл";
             e.printStackTrace();
+        }
+        finally
+        {
+            NotifyObservers();
         }
         return students;
     }
@@ -95,13 +107,18 @@ public class StudentCSVRepository implements Observable
                         item.MathScore, item.PhysicsScore, item.RussianScore);
             }
             csvPrinter.flush();
-            NotifyObservers();
+            lastOperation = "Файл сохранен по текущему пути";
             return true;
         }
         catch (IOException e)
         {
+            lastOperation = "Не удалось сохранить файл";
             System.out.println(e.getMessage());
             return false;
+        }
+        finally
+        {
+            NotifyObservers();
         }
     }
     public boolean SaveAs(ObservableList<Student> items)
@@ -109,7 +126,10 @@ public class StudentCSVRepository implements Observable
         File file = new File(filePath);
         if (!isFileExist(file))
         {
-            if(!CreateFile()) return false;
+            if(!CreateFile())
+            {
+                return false;
+            }
         }
         return Save(items);
     }
@@ -118,12 +138,23 @@ public class StudentCSVRepository implements Observable
         try
         {
             File file = new File(filePath);
-            return file.createNewFile();
+            var result = file.createNewFile();
+            if (result)
+            {
+                lastOperation = "Создан файл";
+            }
+            else lastOperation = "Не удалось создать файл";
+            return result;
         }
         catch (IOException e)
         {
+            lastOperation = "Не удалось создать файл";
             System.out.println(e.getMessage());
             return false;
+        }
+        finally
+        {
+            NotifyObservers();
         }
     }
     private boolean isFileExist(File file)

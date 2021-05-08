@@ -55,6 +55,7 @@ public class MainScreen extends JFrame implements Observer
     private JTextField dayTextBox;
     private JTextField monthTextBox;
     private JTextField yearTextBox;
+    private JTextArea logArea;
 
 
     MainScreen(String title)
@@ -84,6 +85,8 @@ public class MainScreen extends JFrame implements Observer
         add(buttonsPanel);
         var sortPanel = createSortPanel();
         add(sortPanel);
+        var logPanel = createLogPanel();
+        add(logPanel);
 
         menuBar.add(createFileMenuBar());
         menuBar.add(createHelpMenuBar());
@@ -96,6 +99,7 @@ public class MainScreen extends JFrame implements Observer
     private void initActionListeners()
     {
         createButton.addActionListener(e -> handleButtonCreateClickEvent(e));
+        createButton.addActionListener(e -> fuck());
         deleteButton.addActionListener(e -> handleButtonDeleteClickEvent(e));
         editButton.addActionListener(e -> handleButtonEditClickEvent(e));
         dropSelectionButton.addActionListener(e -> handleButtonDropSelectionClickEvent(e));
@@ -131,6 +135,10 @@ public class MainScreen extends JFrame implements Observer
 
 
     }
+    private void fuck()
+    {
+        System.out.println("FUCK");
+    }
 
     //region EVENT_HANDLERS
     private void handleNewClickEvent(ActionEvent e)
@@ -152,6 +160,7 @@ public class MainScreen extends JFrame implements Observer
         repository.setFilePath(filepath);
         students.clear();
         students.addAll(repository.GetAll());
+        table.updateUI();
     }
 
     private void handleSaveAsClickEvent(ActionEvent e)
@@ -188,6 +197,8 @@ public class MainScreen extends JFrame implements Observer
     private void handleButtonCreateClickEvent(ActionEvent e)
     {
         students.add(createStudentByTextBoxes());
+        handleButtonDropSelectionClickEvent(e);
+        //table.setRowSelectionInterval(students.size() - 1, students.size() - 1);
     }
 
     private void handleButtonEditClickEvent(ActionEvent e)
@@ -232,6 +243,20 @@ public class MainScreen extends JFrame implements Observer
         return student;
     }
     //region UI_CREATION
+    private JPanel createLogPanel()
+    {
+        var panel = new JPanel(null);
+        logArea = new JTextArea();
+        logArea.setEditable(false);
+
+        JScrollPane scrollPane = new  JScrollPane(logArea);
+        scrollPane.setBounds(5,5,290,90);
+
+        panel.add(scrollPane);
+        panel.setBounds(430,120,300,100);
+        panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
+        return panel;
+    }
     private JPanel createSortPanel()
     {
         var panel = new JPanel(null);
@@ -240,15 +265,15 @@ public class MainScreen extends JFrame implements Observer
         sortComboBox = new JComboBox(Sort.values());
         var sortLabel = new JLabel("Сортировать \n по:");
 
-        sortLabel.setBounds(10,5,200,40);
-        sortComboBox.setBounds(10,55,200,30);
-        sortButton.setBounds(10,95,200,40);
+        sortLabel.setBounds(10,5,200,25);
+        sortComboBox.setBounds(10,35,200,25);
+        sortButton.setBounds(10,65,200,30);
 
         panel.add(sortButton);
         panel.add(sortComboBox);
         panel.add(sortLabel);
 
-        panel.setBounds(430,10,220,215);
+        panel.setBounds(430,10,220,100);
         panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
 
         return panel;
@@ -427,12 +452,12 @@ public class MainScreen extends JFrame implements Observer
     {
         if (source instanceof ObservableList)
         {
-            isSaved = false;
             table.updateUI();
         }
-        else if (source instanceof StudentCSVRepository)
+        var msg = source.getLastOperation();
+        if(msg != null)
         {
-            isSaved = true;
+            logArea.append(msg +"\n");
         }
     }
     //endregion

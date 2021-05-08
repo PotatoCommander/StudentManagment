@@ -66,17 +66,25 @@ public class KeyAdapterFactory
         public void keyTyped(KeyEvent e)
         {
             char c = e.getKeyChar();
+            if (!Character.isDigit(c))
+            {
+                e.consume();
+                return;
+            }
             var text = ((JTextField)e.getSource()).getText();
             var length = text.length();
             switch (length)
             {
                 case 0:
-                    if (!(c>='1' && c<='3')) e.consume();
                     break;
                 case 1:
                     if(text.charAt(0) =='3')
                     {
                         if (c!='1' && c!='0') e.consume();
+                    }
+                    if(text.charAt(0) >= '4' && text.charAt(0) <= '9')
+                    {
+                        e.consume();
                     }
                     break;
                 default:

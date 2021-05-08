@@ -8,9 +8,18 @@ import java.util.Collection;
 public class ObservableList<E> extends ArrayList<E> implements Observable
 {
     private ArrayList<Observer> observers = new ArrayList<>();
+    private String lastOperation;
+
+    @Override
+    public String getLastOperation()
+    {
+        return lastOperation;
+    }
+
     @Override
     public boolean add(E e)
     {
+        lastOperation = "Добавлен объект";
         NotifyObservers();
         return super.add(e);
     }
@@ -18,6 +27,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public E remove(int index)
     {
+        lastOperation = String.format("Удален {0} объект", index);
         NotifyObservers();
         return super.remove(index);
     }
@@ -25,6 +35,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public E set(int index, E element)
     {
+        lastOperation = String.format("Изменен {0} объект", index);
         NotifyObservers();
         return super.set(index, element);
     }
@@ -32,6 +43,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public void clear()
     {
+        lastOperation = null;
         NotifyObservers();
         super.clear();
     }
@@ -39,6 +51,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public boolean addAll(Collection<? extends E> c)
     {
+        lastOperation = null;
         NotifyObservers();
         return super.addAll(c);
     }

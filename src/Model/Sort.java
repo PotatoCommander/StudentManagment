@@ -1,6 +1,6 @@
 package Model;
 
-public  enum Sort
+public enum Sort
 {
     FIRST_NAME("Имя"),
     LAST_NAME("Фамилия"),
