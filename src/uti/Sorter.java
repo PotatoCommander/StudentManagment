@@ -1,13 +1,46 @@
-package Util;
+package uti;
 
-import Model.Enums.Sort;
-import Model.Student;
+import model.abstractions.Observable;
+import model.abstractions.Observer;
+import model.enums.Actions;
+import model.enums.Sort;
+import model.Message;
+import model.Student;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 
-public class Sorter
+public class Sorter implements Observable
 {
+    ArrayList<Observer> observers;
+    public Sorter()
+    {
+        observers = new ArrayList<>();
+    }
+    @Override
+    public void AddObserver(Observer observer)
+    {
+        observers.add(observer);
+    }
+
+    @Override
+    public void RemoveObserver(Observer observer)
+    {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void NotifyObservers(Message message)
+    {
+        if (observers != null)
+        {
+            for (Observer observer : observers)
+            {
+                observer.Update(message);
+            }
+        }
+    }
+
     public static class ScoreSorter implements Comparator<Student>
     {
         @Override
@@ -20,7 +53,7 @@ public class Sorter
         @Override
         public int compare(Student o1, Student o2)
         {
-            return o2.FirstName.compareTo(o1.FirstName);
+            return o1.FirstName.compareTo(o2.FirstName);
         }
     }
     public static class LastNameSorter implements Comparator<Student>
@@ -28,14 +61,14 @@ public class Sorter
         @Override
         public int compare(Student o1, Student o2)
         {
-            return o2.LastName.compareTo(o1.LastName);
+            return o1.LastName.compareTo(o2.LastName);
         }
     }
     public static class PatronymicSorter implements Comparator<Student>
     {
         @Override
         public int compare(Student o1, Student o2) {
-            return o2.Patronymic.compareTo(o1.Patronymic);
+            return o1.Patronymic.compareTo(o2.Patronymic);
         }
     }
     public static class DateBirthSorter implements Comparator<Student>
@@ -46,7 +79,7 @@ public class Sorter
             return o2.DateOfBirth.compareTo(o1.DateOfBirth);
         }
     }
-    public static ArrayList<Student> SortBy(ArrayList<Student> students, Sort sortType)
+    public  ArrayList<Student> SortBy(ArrayList<Student> students, Sort sortType)
     {
         Comparator<Student> comparator = switch (sortType)
                 {
@@ -57,6 +90,8 @@ public class Sorter
                     case PATRONYMIC -> new PatronymicSorter();
                 };
         students.sort(comparator);
+        var action = Actions.LIST_SORTED;
+        NotifyObservers(new Message(this, action, action.toString() + sortType.toString()));
         return students;
     }
 }

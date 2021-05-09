@@ -1,8 +1,8 @@
-package Model.CustomLists;
-import Model.Abstraction.Observable;
-import Model.Abstraction.Observer;
-import Model.Enums.Actions;
-import Model.Message;
+package model.customLists;
+import model.abstractions.Observable;
+import model.abstractions.Observer;
+import model.enums.Actions;
+import model.Message;
 
 import java.util.ArrayList;
 import java.util.Collection;

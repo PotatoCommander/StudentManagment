@@ -1,6 +1,6 @@
-package Model.Abstraction;
+package model.abstractions;
 
-import Model.Message;
+import model.Message;
 
 public interface Observable
 {

@@ -1,16 +1,16 @@
-package Frames;
+package frames;
 
 import DAL.StudentCSVRepository;
-import Model.Enums.Adapters;
-import Model.Message;
-import Model.Enums.Sort;
-import Model.CustomLists.ObservableList;
-import Model.Abstraction.Observer;
-import Model.Student;
-import TableModels.StudentTableModel;
-import Util.FileHandler;
-import Util.KeyAdapterFactory;
-import Util.Sorter;
+import model.enums.Adapters;
+import model.Message;
+import model.enums.Sort;
+import model.customLists.ObservableList;
+import model.abstractions.Observer;
+import model.Student;
+import tableModels.StudentTableModel;
+import uti.FileHandler;
+import uti.KeyAdapterFactory;
+import uti.Sorter;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -26,9 +26,8 @@ import java.util.GregorianCalendar;
 //TODO: Add HelpFrame and AboutFrame
 //TODO: Add JavaDoc to public methods
 //TODO: Approbation of functionality
-//TODO: Change asc to desc in sorter
 //TODO: Change month display format to +1
-public class MainScreen extends JFrame implements Observer
+public class MainFrame extends JFrame implements Observer
 {
     private JMenuBar menuBar;
     private ObservableList<Student> students;
@@ -67,10 +66,13 @@ public class MainScreen extends JFrame implements Observer
     private JButton saveFileButton;
     private JButton openFileButton;
     private JButton newFileButton;
+    private Sorter sorter;
 
 
-    MainScreen(String title)
+    public MainFrame(String title)
     {
+        sorter = new Sorter();
+        sorter.AddObserver(this);
         isSaved = false;
         repository = new StudentCSVRepository();
         repository.AddObserver(this);
@@ -151,6 +153,7 @@ public class MainScreen extends JFrame implements Observer
     private void handleNewClickEvent(ActionEvent e)
     {
         var filepath = fileHandler.newFileDialog();
+        if (filepath == null) return;
         repository.setFilePath(filepath);
         repository.CreateFile();
         students.clear();
@@ -164,6 +167,7 @@ public class MainScreen extends JFrame implements Observer
     private void handleOpenClickEvent(ActionEvent e)
     {
         var filepath = fileHandler.openFileDialog();
+        if (filepath == null) return;
         repository.setFilePath(filepath);
         students.clear();
         students.addAll(repository.GetAll());
@@ -172,13 +176,14 @@ public class MainScreen extends JFrame implements Observer
     private void handleSaveAsClickEvent(ActionEvent e)
     {
         var filepath = fileHandler.saveAsFileDialog();
+        if (filepath == null) return;
         repository.setFilePath(filepath);
         repository.SaveAs(students);
     }
     private void handleButtonSortClickEvent(ActionEvent e)
     {
         var selected = (Sort) sortComboBox.getSelectedItem();
-        Sorter.SortBy(students, Sort.valueOf(selected.name()));
+        sorter.SortBy(students, Sort.valueOf(selected.name()));
         table.updateUI();
     }
     private void handleSelectionEvent(ListSelectionEvent e)
@@ -203,10 +208,9 @@ public class MainScreen extends JFrame implements Observer
     private void handleButtonCreateClickEvent(ActionEvent e)
     {
         students.add(createStudentByTextBoxes());
-        handleButtonDropSelectionClickEvent(e);
-        //table.setRowSelectionInterval(students.size() - 1, students.size() - 1);
+        //handleButtonDropSelectionClickEvent(e);
+        table.setRowSelectionInterval(students.size() - 1, students.size() - 1);
     }
-
     private void handleButtonEditClickEvent(ActionEvent e)
     {
         var index = table.getSelectedRow();
@@ -514,7 +518,7 @@ public class MainScreen extends JFrame implements Observer
 
         return helpMenu;
     }
-
+    //endregion
     @Override
     public void Update(Message message)
     {
@@ -529,5 +533,4 @@ public class MainScreen extends JFrame implements Observer
             logArea.append(sdf.format(message.getActionTime()) + msg +"\n");
         }
     }
-    //endregion
 }

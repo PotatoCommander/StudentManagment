@@ -1,6 +1,6 @@
-package Util;
+package uti;
 
-import Model.Enums.Adapters;
+import model.enums.Adapters;
 
 import javax.swing.*;
 import java.awt.event.KeyAdapter;

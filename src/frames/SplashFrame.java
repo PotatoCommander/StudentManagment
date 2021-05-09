@@ -1,4 +1,4 @@
-package Frames;
+package frames;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -8,10 +8,10 @@ import java.io.File;
 import java.io.IOException;
 
 public
-class SplashScreen extends JFrame
+class SplashFrame extends JFrame
 {
 
-    public SplashScreen(String headerText)
+    public SplashFrame(String headerText)
     {
         setResizable(false);
         setSize(800, 600);
@@ -45,7 +45,7 @@ class SplashScreen extends JFrame
 
         jbtStart.addActionListener(e -> {
             dispose();
-            new MainScreen("Формирование списка абитуриентов");
+            new MainFrame("Формирование списка абитуриентов");
         });
         jbtExit.addActionListener(e -> System.exit(EXIT_ON_CLOSE));
         add(new myComponent());

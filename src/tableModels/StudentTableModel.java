@@ -1,9 +1,8 @@
-package TableModels;
+package tableModels;
 
-import Model.Student;
+import model.Student;
 
 import javax.swing.table.AbstractTableModel;
-import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 

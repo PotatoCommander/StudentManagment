@@ -1,11 +1,10 @@
-package Util;
+package uti;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 
 public class FileHandler
 {

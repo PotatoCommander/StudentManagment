@@ -1,11 +1,11 @@
 package DAL;
 
-import Model.Abstraction.Observable;
-import Model.Abstraction.Observer;
-import Model.Enums.Actions;
-import Model.CustomLists.ObservableList;
-import Model.Message;
-import Model.Student;
+import model.abstractions.Observable;
+import model.abstractions.Observer;
+import model.enums.Actions;
+import model.customLists.ObservableList;
+import model.Message;
+import model.Student;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -75,7 +75,7 @@ public class StudentCSVRepository implements Observable
 
                 students.add(student);
             }
-            action = Actions.OPENED_FILE;
+            action = Actions.FILE_OPENED;
         }
         catch (IOException | ParseException e)
         {
@@ -88,7 +88,6 @@ public class StudentCSVRepository implements Observable
         }
         return students;
     }
-
     public boolean Save(ObservableList<Student> items)
     {
         Actions action = null;
@@ -103,7 +102,7 @@ public class StudentCSVRepository implements Observable
                         item.MathScore, item.PhysicsScore, item.RussianScore);
             }
             csvPrinter.flush();
-            action = Actions.SAVED_FILE;
+            action = Actions.FILE_SAVED;
             return true;
         }
         catch (IOException e)
@@ -138,7 +137,7 @@ public class StudentCSVRepository implements Observable
             var result = file.createNewFile();
             if (result)
             {
-                action = Actions.CREATED_FILE;
+                action = Actions.FILE_CREATED;
             }
             else action = Actions.FAIL_NEW_FILE;
             return result;
@@ -156,7 +155,7 @@ public class StudentCSVRepository implements Observable
     }
     private boolean isFileExist(File file)
     {
-        return file.exists() || !file.isDirectory();
+        return file.exists() && !file.isDirectory();
     }
 
 

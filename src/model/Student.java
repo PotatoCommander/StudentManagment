@@ -1,8 +1,7 @@
-package Model;
+package model;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.UUID;
 
 public class Student
 {

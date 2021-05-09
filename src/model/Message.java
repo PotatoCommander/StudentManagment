@@ -1,30 +1,31 @@
-package Model;
+package model;
 
-import Model.Abstraction.Observable;
-import Model.Enums.Actions;
+import model.abstractions.Observable;
+import model.enums.Actions;
 
 import java.util.Date;
 
 public class Message
 {
-    private Observable initiator;
+    private final Observable initiator;
     public Observable getInitiator()
     {
         return initiator;
     }
 
-    private Date actionTime;
+    private final Date actionTime;
     public Date getActionTime()
     {
         return actionTime;
     }
 
-    private Actions action;
+    private final Actions action;
     public Actions getAction()
     {
         return action;
     }
-    private String info;
+
+    private final String info;
     public String getInfo()
     {
         return info;

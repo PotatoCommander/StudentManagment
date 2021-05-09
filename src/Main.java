@@ -1,9 +1,9 @@
-import Frames.SplashScreen;
+import frames.SplashFrame;
 
 public class Main
 {
     public static void main(String[] args)
     {
-        new SplashScreen("Список абитуриентов");
+        new SplashFrame("Список абитуриентов");
     }
 }
