@@ -1,6 +1,8 @@
 package Model.Abstraction;
 
+import Model.Message;
+
 public interface Observer
 {
-    void Update(Observable source);
+    void Update(Message message);
 }

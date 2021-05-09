@@ -1,9 +1,9 @@
 package Frames;
 
 import DAL.StudentCSVRepository;
-import Model.Abstraction.Observable;
-import Model.Adapters;
-import Model.Sort;
+import Model.Enums.Adapters;
+import Model.Message;
+import Model.Enums.Sort;
 import Model.CustomLists.ObservableList;
 import Model.Abstraction.Observer;
 import Model.Student;
@@ -18,9 +18,16 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-
+//TODO: Refactoring
+//TODO: Separate listeners as classes
+//TODO: Add HelpFrame and AboutFrame
+//TODO: Add JavaDoc to public methods
+//TODO: Approbation of functionality
+//TODO: Change asc to desc in sorter
+//TODO: Change month display format to +1
 public class MainScreen extends JFrame implements Observer
 {
     private JMenuBar menuBar;
@@ -57,6 +64,10 @@ public class MainScreen extends JFrame implements Observer
     private JTextField yearTextBox;
     private JTextArea logArea;
 
+    private JButton saveFileButton;
+    private JButton openFileButton;
+    private JButton newFileButton;
+
 
     MainScreen(String title)
     {
@@ -87,6 +98,8 @@ public class MainScreen extends JFrame implements Observer
         add(sortPanel);
         var logPanel = createLogPanel();
         add(logPanel);
+        var fileButtonsPanel = createFileButtonsPanel();
+        add(fileButtonsPanel);
 
         menuBar.add(createFileMenuBar());
         menuBar.add(createHelpMenuBar());
@@ -99,7 +112,6 @@ public class MainScreen extends JFrame implements Observer
     private void initActionListeners()
     {
         createButton.addActionListener(e -> handleButtonCreateClickEvent(e));
-        createButton.addActionListener(e -> fuck());
         deleteButton.addActionListener(e -> handleButtonDeleteClickEvent(e));
         editButton.addActionListener(e -> handleButtonEditClickEvent(e));
         dropSelectionButton.addActionListener(e -> handleButtonDropSelectionClickEvent(e));
@@ -135,11 +147,6 @@ public class MainScreen extends JFrame implements Observer
 
 
     }
-    private void fuck()
-    {
-        System.out.println("FUCK");
-    }
-
     //region EVENT_HANDLERS
     private void handleNewClickEvent(ActionEvent e)
     {
@@ -160,7 +167,6 @@ public class MainScreen extends JFrame implements Observer
         repository.setFilePath(filepath);
         students.clear();
         students.addAll(repository.GetAll());
-        table.updateUI();
     }
 
     private void handleSaveAsClickEvent(ActionEvent e)
@@ -243,23 +249,64 @@ public class MainScreen extends JFrame implements Observer
         return student;
     }
     //region UI_CREATION
+    private JPanel createFileButtonsPanel()
+    {
+        var panel = new JPanel(null);
+
+        Icon saveIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\floppy-disk.png");
+        Icon openIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\folders.png");
+        Icon newIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\file-plus.png");
+
+
+        saveFileButton = new JButton(saveIcon);
+        openFileButton = new JButton(openIcon);
+        newFileButton = new JButton(newIcon);
+
+        saveFileButton.setHorizontalAlignment(SwingConstants.CENTER);
+        saveFileButton.setIconTextGap(20);
+
+        openFileButton.setHorizontalAlignment(SwingConstants.CENTER);
+        openFileButton.setIconTextGap(20);
+
+        newFileButton.setHorizontalAlignment(SwingConstants.CENTER);
+        newFileButton.setIconTextGap(20);
+
+        newFileButton.setBounds(22,6,70,25);
+        saveFileButton.setBackground(new Color(160, 212, 156));
+        openFileButton.setBounds(22,37,70,25);
+        saveFileButton.setBounds(22,69,70,25);
+
+        panel.add(saveFileButton);
+        panel.add(openFileButton);
+        panel.add(newFileButton);
+
+        panel.setBounds(660,10,115,100);
+        panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
+
+        return panel;
+    }
     private JPanel createLogPanel()
     {
         var panel = new JPanel(null);
         logArea = new JTextArea();
         logArea.setEditable(false);
+        logArea.setBackground(new Color(0, 9, 114));
+        logArea.setForeground(new Color(215, 190, 90));
+        logArea.setFont(new Font("Consolas",Font.PLAIN, 12));
 
         JScrollPane scrollPane = new  JScrollPane(logArea);
-        scrollPane.setBounds(5,5,290,90);
+        scrollPane.setBounds(5,5,335,95);
 
         panel.add(scrollPane);
-        panel.setBounds(430,120,300,100);
+        panel.setBounds(430,120,345,105);
         panel.setBorder(BorderFactory.createLineBorder(Color.darkGray));
         return panel;
     }
     private JPanel createSortPanel()
     {
         var panel = new JPanel(null);
+
+        Icon sortIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\funnel-simple.png");
 
         sortButton = new JButton("Сортировать");
         sortComboBox = new JComboBox(Sort.values());
@@ -268,6 +315,10 @@ public class MainScreen extends JFrame implements Observer
         sortLabel.setBounds(10,5,200,25);
         sortComboBox.setBounds(10,35,200,25);
         sortButton.setBounds(10,65,200,30);
+
+        sortButton.setHorizontalAlignment(SwingConstants.LEFT);
+        sortButton.setIcon(sortIcon);
+        sortButton.setIconTextGap(20);
 
         panel.add(sortButton);
         panel.add(sortComboBox);
@@ -282,9 +333,26 @@ public class MainScreen extends JFrame implements Observer
     {
         var panel = new JPanel(null);
 
+        Icon createIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\plus-square.png");
+        Icon editIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\edit (1).png");
+        Icon deleteIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\delete.png");
+
+
         createButton = new JButton("Создать");
         editButton = new JButton("Изменить");
         deleteButton = new JButton("Удалить");
+
+        createButton.setHorizontalAlignment(SwingConstants.LEFT);
+        createButton.setIcon(createIcon);
+        createButton.setIconTextGap(20);
+
+        deleteButton.setHorizontalAlignment(SwingConstants.LEFT);
+        deleteButton.setIcon(deleteIcon);
+        deleteButton.setIconTextGap(20);
+
+        editButton.setHorizontalAlignment(SwingConstants.LEFT);
+        editButton.setIcon(editIcon);
+        editButton.setIconTextGap(20);
 
         createButton.setBounds(10,5,170,30);
         editButton.setBounds(10,40,170,30);
@@ -448,16 +516,17 @@ public class MainScreen extends JFrame implements Observer
     }
 
     @Override
-    public void Update(Observable source)
+    public void Update(Message message)
     {
-        if (source instanceof ObservableList)
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm ");
+        if (message.getInitiator() instanceof ObservableList)
         {
             table.updateUI();
         }
-        var msg = source.getLastOperation();
-        if(msg != null)
+        var msg = message.getInfo();
+        if(message.getAction() != null)
         {
-            logArea.append(msg +"\n");
+            logArea.append(sdf.format(message.getActionTime()) + msg +"\n");
         }
     }
     //endregion

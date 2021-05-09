@@ -43,7 +43,7 @@ public class StudentTableModel extends AbstractTableModel
             case 2:
                 return student.Patronymic;
             case 3:
-                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                 return sdf.format(student.DateOfBirth.getTime());
             case 4:
                 return student.MathScore;

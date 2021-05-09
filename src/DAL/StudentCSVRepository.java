@@ -2,7 +2,9 @@ package DAL;
 
 import Model.Abstraction.Observable;
 import Model.Abstraction.Observer;
+import Model.Enums.Actions;
 import Model.CustomLists.ObservableList;
+import Model.Message;
 import Model.Student;
 
 import java.io.BufferedWriter;
@@ -14,8 +16,6 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -32,22 +32,17 @@ public class StudentCSVRepository implements Observable
         this.filePath = path;
     }
     private String[] header = {"FirstName", "LastName", "Patronymic","DateOfBirth", "MathScore", "RussianScore", "PhysicsScore"};
-    private String lastOperation;
-
-    public String getLastOperation()
-    {
-        return lastOperation;
-    }
 
     public StudentCSVRepository()
     {
-        sdf = new SimpleDateFormat("dd-MM-yyyy");
+        sdf = new SimpleDateFormat("dd/MM/yyyy");
         observers = new ArrayList<>();
         filePath = null;
     }
 
     public ObservableList<Student> GetAll()
     {
+        Actions action = null;
         var students = new ObservableList<Student>();
         try
         {
@@ -80,22 +75,23 @@ public class StudentCSVRepository implements Observable
 
                 students.add(student);
             }
-            lastOperation = "Извлечен список из файла";
+            action = Actions.OPENED_FILE;
         }
         catch (IOException | ParseException e)
         {
-            lastOperation = "Не удалось открыть файл";
+            action = Actions.FAIL_OPEN_FILE;
             e.printStackTrace();
         }
         finally
         {
-            NotifyObservers();
+            NotifyObservers(new Message(this, action, action.toString() + filePath));
         }
         return students;
     }
 
     public boolean Save(ObservableList<Student> items)
     {
+        Actions action = null;
         try
         {
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath));
@@ -107,18 +103,18 @@ public class StudentCSVRepository implements Observable
                         item.MathScore, item.PhysicsScore, item.RussianScore);
             }
             csvPrinter.flush();
-            lastOperation = "Файл сохранен по текущему пути";
+            action = Actions.SAVED_FILE;
             return true;
         }
         catch (IOException e)
         {
-            lastOperation = "Не удалось сохранить файл";
+            action = Actions.FAIL_SAVE_FILE;
             System.out.println(e.getMessage());
             return false;
         }
         finally
         {
-            NotifyObservers();
+            NotifyObservers(new Message(this, action, action.toString() + filePath));
         }
     }
     public boolean SaveAs(ObservableList<Student> items)
@@ -135,26 +131,27 @@ public class StudentCSVRepository implements Observable
     }
     public boolean CreateFile()
     {
+        Actions action = null;
         try
         {
             File file = new File(filePath);
             var result = file.createNewFile();
             if (result)
             {
-                lastOperation = "Создан файл";
+                action = Actions.CREATED_FILE;
             }
-            else lastOperation = "Не удалось создать файл";
+            else action = Actions.FAIL_NEW_FILE;
             return result;
         }
         catch (IOException e)
         {
-            lastOperation = "Не удалось создать файл";
+            action = Actions.FAIL_NEW_FILE;
             System.out.println(e.getMessage());
             return false;
         }
         finally
         {
-            NotifyObservers();
+            NotifyObservers(new Message(this, action, action.toString() + filePath));
         }
     }
     private boolean isFileExist(File file)
@@ -177,13 +174,13 @@ public class StudentCSVRepository implements Observable
     }
 
     @Override
-    public void NotifyObservers()
+    public void NotifyObservers(Message message)
     {
         if (observers != null)
         {
             for (Observer observer : observers)
             {
-                observer.Update(this);
+                observer.Update(message);
             }
         }
     }
