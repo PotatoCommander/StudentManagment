@@ -4,9 +4,17 @@ import model.abstractions.Observer;
 import model.enums.Actions;
 import model.Message;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
-
+/**
+ *<strong>ObservableList</strong>
+ *
+ * <i> extends {@link ArrayList} and implements {@link Observable}</i>.
+ * Contains overrided methods of built-in list with notifying observers if any action performed.
+ * @author Nikita Bodry
+ * @version 1.0
+ */
 public class ObservableList<E> extends ArrayList<E> implements Observable
 {
     private ArrayList<Observer> observers = new ArrayList<>();
@@ -14,7 +22,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public boolean add(E e)
     {
-        var action = Actions.ITEM_ADDED;
+        Actions action = Actions.ITEM_ADDED;
         NotifyObservers(new Message(this,action,action.toString()));
         return super.add(e);
     }
@@ -22,7 +30,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public E remove(int index)
     {
-        var action = Actions.ITEM_REMOVED;
+        Actions action = Actions.ITEM_REMOVED;
         NotifyObservers(new Message(this,action,action.toString()));
         return super.remove(index);
     }
@@ -30,7 +38,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public E set(int index, E element)
     {
-        var action = Actions.ITEM_REPLACED;
+        Actions action = Actions.ITEM_REPLACED;
         NotifyObservers(new Message(this,action,action.toString()));
         return super.set(index, element);
     }
@@ -38,7 +46,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     @Override
     public void clear()
     {
-        var action = Actions.LIST_CLEARED;
+        Actions action = Actions.LIST_CLEARED;
         NotifyObservers(new Message(this,Actions.LIST_CLEARED,action.toString()));
         super.clear();
     }
@@ -47,7 +55,7 @@ public class ObservableList<E> extends ArrayList<E> implements Observable
     public boolean addAll(Collection<? extends E> c)
     {
 
-        var action = Actions.ITEMS_ADDED;
+        Actions action = Actions.ITEMS_ADDED;
         NotifyObservers(new Message(this,action,action.toString()));
         return super.addAll(c);
     }

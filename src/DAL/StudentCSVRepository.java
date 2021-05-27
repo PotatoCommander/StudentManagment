@@ -7,11 +7,9 @@ import model.customLists.ObservableList;
 import model.Message;
 import model.Student;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,29 +19,47 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
-
+/**
+ *<strong>CSVRepository</strong>
+ *
+ * <i>contains CRUD methods for operating CSV data from file</i>
+ *
+ * @author Nikita Bodry
+ * @version 1.0
+ */
 public class StudentCSVRepository implements Observable
 {
     private ArrayList<Observer> observers;
     private String filePath;
     SimpleDateFormat sdf;
+    /**
+     * Set the file path.
+     * <b>Use this method before all CRUD methods if filepath changed</b>
+     *
+     */
     public void setFilePath(String path)
     {
         this.filePath = path;
     }
     private String[] header = {"FirstName", "LastName", "Patronymic","DateOfBirth", "MathScore", "RussianScore", "PhysicsScore"};
-
+    /**
+     *<i>Constructor to create CSVRepository - data access layer with CRUD methods</i>
+     */
     public StudentCSVRepository()
     {
         sdf = new SimpleDateFormat("dd/MM/yyyy");
         observers = new ArrayList<>();
         filePath = null;
     }
-
+    /**Returns a List of objects extracted from CSV file by filepath
+     *
+     * @return  An array of objects.Type of list is {@link ObservableList}.
+     *
+     */
     public ObservableList<Student> GetAll()
     {
         Actions action = null;
-        var students = new ObservableList<Student>();
+        ObservableList students = new ObservableList<Student>();
         try
         {
             Reader reader = Files.newBufferedReader(Paths.get(filePath));
@@ -55,15 +71,15 @@ public class StudentCSVRepository implements Observable
 
             for (CSVRecord csvRecord : csvParser)
             {
-                var firstName = csvRecord.get("FirstName");
-                var lastName = csvRecord.get("LastName");
-                var patronymic = csvRecord.get("Patronymic");
-                var dateOfBirth = csvRecord.get("DateOfBirth");
-                var mathScore = Integer.parseInt(csvRecord.get("MathScore"));
-                var russianScore = Integer.parseInt(csvRecord.get("RussianScore"));
-                var physicsScore = Integer.parseInt(csvRecord.get("PhysicsScore"));
+                String firstName = csvRecord.get("FirstName");
+                String lastName = csvRecord.get("LastName");
+                String patronymic = csvRecord.get("Patronymic");
+                String dateOfBirth = csvRecord.get("DateOfBirth");
+                int mathScore = Integer.parseInt(csvRecord.get("MathScore"));
+                int russianScore = Integer.parseInt(csvRecord.get("RussianScore"));
+                int physicsScore = Integer.parseInt(csvRecord.get("PhysicsScore"));
 
-                var student = new Student();
+                Student student = new Student();
 
                 student.FirstName = firstName;
                 student.LastName = lastName;
@@ -88,6 +104,12 @@ public class StudentCSVRepository implements Observable
         }
         return students;
     }
+    /**Saving a list of items in file
+     * @param   items
+     *          A list of items to save.
+     * @return  Boolean = True if file was successfully saved.
+     *          Boolean = False - in case of fail.
+     */
     public boolean Save(ObservableList<Student> items)
     {
         Actions action = null;
@@ -116,6 +138,13 @@ public class StudentCSVRepository implements Observable
             NotifyObservers(new Message(this, action, action.toString() + filePath));
         }
     }
+    /**Saving a list of items in file by path.
+     * If file not exist create new.
+     * @param   items
+     *          A list of items to save.
+     * @return Boolean = {@code true} if file was successfully saved.
+     *         Boolean = {@code false} - in case of fail.
+     */
     public boolean SaveAs(ObservableList<Student> items)
     {
         File file = new File(filePath);
@@ -128,13 +157,18 @@ public class StudentCSVRepository implements Observable
         }
         return Save(items);
     }
+    /**Creating file by a path.
+     * @return  Boolean = {@code true} if file was successfully created.
+     *          Boolean = {@code false} - in case of fail.
+     *
+     */
     public boolean CreateFile()
     {
         Actions action = null;
         try
         {
             File file = new File(filePath);
-            var result = file.createNewFile();
+            boolean result = file.createNewFile();
             if (result)
             {
                 action = Actions.FILE_CREATED;

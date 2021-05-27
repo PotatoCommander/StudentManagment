@@ -14,19 +14,21 @@ import uti.Sorter;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-//TODO: Refactoring
-//TODO: Separate listeners as classes
-//TODO: Add HelpFrame and AboutFrame
-//TODO: Add JavaDoc to public methods
-//TODO: Approbation of functionality
-//TODO: Change month display format to +1
+/**
+ *<strong>MainFrame</strong>
+ *
+ * <i> extends JFrame and implements Observer.</i>
+ * Contains main logic of application (event handlers).
+ * Contains UI and implemented Update method with logic.
+ * @author Nikita Bodry
+ * @version 1.0
+ */
 public class MainFrame extends JFrame implements Observer
 {
     private JMenuBar menuBar;
@@ -57,7 +59,6 @@ public class MainFrame extends JFrame implements Observer
     private JMenuItem saveMenuItem;
     private JMenuItem saveAsMenuItem;
 
-    private boolean isSaved;
     private JTextField dayTextBox;
     private JTextField monthTextBox;
     private JTextField yearTextBox;
@@ -67,13 +68,19 @@ public class MainFrame extends JFrame implements Observer
     private JButton openFileButton;
     private JButton newFileButton;
     private Sorter sorter;
+    private JMenuItem aboutProgramButton;
+    private JMenuItem aboutAuthorButton;
+    private JMenuItem exitMenuItem;
 
-
+    /**Constructor of MainFrame contains calling of UI creation methods and
+     * connecting element actions to listeners.
+     * @param title
+     *          Title of a Frame
+     */
     public MainFrame(String title)
     {
         sorter = new Sorter();
         sorter.AddObserver(this);
-        isSaved = false;
         repository = new StudentCSVRepository();
         repository.AddObserver(this);
         menuBar = new JMenuBar();
@@ -88,19 +95,19 @@ public class MainFrame extends JFrame implements Observer
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
 
-        var dataTable = createDataTable();
+        JScrollPane dataTable = createDataTable();
         add(dataTable);
-        var inputInitials = createInputInitialsPanel();
+        JPanel inputInitials = createInputInitialsPanel();
         add(inputInitials);
-        var inputScorePanel = createInputScorePanel();
+        JPanel inputScorePanel = createInputScorePanel();
         add(inputScorePanel);
-        var buttonsPanel = createButtonsPanel();
+        JPanel buttonsPanel = createButtonsPanel();
         add(buttonsPanel);
-        var sortPanel = createSortPanel();
+        JPanel sortPanel = createSortPanel();
         add(sortPanel);
-        var logPanel = createLogPanel();
+        JPanel logPanel = createLogPanel();
         add(logPanel);
-        var fileButtonsPanel = createFileButtonsPanel();
+        JPanel fileButtonsPanel = createFileButtonsPanel();
         add(fileButtonsPanel);
 
         menuBar.add(createFileMenuBar());
@@ -124,17 +131,17 @@ public class MainFrame extends JFrame implements Observer
         saveMenuItem.addActionListener(e -> handleSaveClickEvent(e));
         newMenuItem.addActionListener(e -> handleNewClickEvent(e));
 
+        newFileButton.addActionListener(e -> handleNewClickEvent(e));
+        openFileButton.addActionListener(e ->  handleOpenClickEvent(e));
+        saveFileButton.addActionListener(e -> handleSaveClickEvent(e));
+
+        aboutAuthorButton.addActionListener(e -> new AboutFrame());
+        aboutProgramButton.addActionListener(e -> new AboutProgramFrame());
+        exitMenuItem.addActionListener(e -> System.exit(EXIT_ON_CLOSE));
+
         ListSelectionModel selectionModel = table.getSelectionModel();
         selectionModel.addListSelectionListener(e -> handleSelectionEvent(e));
 
-        table.getModel().addTableModelListener(
-                new TableModelListener()
-                {
-                    public void tableChanged(TableModelEvent e)
-                    {
-                        isSaved = false;
-                    }
-                });
 
 
 
@@ -142,62 +149,75 @@ public class MainFrame extends JFrame implements Observer
         monthTextBox.addKeyListener(KeyAdapterFactory.getDateRestrictedAdapter(Adapters.MONTH_ADAPTER));
         yearTextBox.addKeyListener(KeyAdapterFactory.getDateRestrictedAdapter(Adapters.YEAR_ADAPTER));
 
-        var scoreAdapter = KeyAdapterFactory.getDigitsRestrictedAdapter(3);
+        KeyAdapter scoreAdapter = KeyAdapterFactory.getDigitsRestrictedAdapter(3);
         mathScoreTextBox.addKeyListener(scoreAdapter);
         russianScoreTextBox.addKeyListener(scoreAdapter);
         physicsScoreTextBox.addKeyListener(scoreAdapter);
 
 
     }
+    private Student createStudentByTextBoxes()
+    {
+        Student student = new Student();
+        student.FirstName = firstNameTextBox.getText();
+        student.LastName = lastNameTextBox.getText();
+        student.Patronymic = patronymicTextBox.getText();
+        student.MathScore = Integer.parseInt(mathScoreTextBox.getText());
+        student.PhysicsScore = Integer.parseInt(physicsScoreTextBox.getText());
+        student.RussianScore = Integer.parseInt(russianScoreTextBox.getText());
+        int day = Integer.parseInt(dayTextBox.getText());
+        int month = Integer.parseInt(monthTextBox.getText());
+        int year = Integer.parseInt(yearTextBox.getText());
+        student.DateOfBirth = new GregorianCalendar(year,month - 1,day);
+
+        return student;
+    }
     //region EVENT_HANDLERS
     private void handleNewClickEvent(ActionEvent e)
     {
-        var filepath = fileHandler.newFileDialog();
+        String filepath = fileHandler.newFileDialog();
         if (filepath == null) return;
         repository.setFilePath(filepath);
         repository.CreateFile();
         students.clear();
     }
-
     private void handleSaveClickEvent(ActionEvent e)
     {
         repository.Save(students);
     }
-
     private void handleOpenClickEvent(ActionEvent e)
     {
-        var filepath = fileHandler.openFileDialog();
+        String filepath = fileHandler.openFileDialog();
         if (filepath == null) return;
         repository.setFilePath(filepath);
         students.clear();
         students.addAll(repository.GetAll());
     }
-
     private void handleSaveAsClickEvent(ActionEvent e)
     {
-        var filepath = fileHandler.saveAsFileDialog();
+        String filepath = fileHandler.saveAsFileDialog();
         if (filepath == null) return;
         repository.setFilePath(filepath);
         repository.SaveAs(students);
     }
     private void handleButtonSortClickEvent(ActionEvent e)
     {
-        var selected = (Sort) sortComboBox.getSelectedItem();
+        Sort selected = (Sort) sortComboBox.getSelectedItem();
         sorter.SortBy(students, Sort.valueOf(selected.name()));
         table.updateUI();
     }
     private void handleSelectionEvent(ListSelectionEvent e)
     {
-        var selectedRow = table.getSelectedRow();
+        int selectedRow = table.getSelectedRow();
         if (selectedRow >= 0)
         {
             firstNameTextBox.setText(table.getValueAt(selectedRow, 0).toString());
             lastNameTextBox.setText(table.getValueAt(selectedRow, 1).toString());
             patronymicTextBox.setText(table.getValueAt(selectedRow, 2).toString());
             {
-                var s = students.get(selectedRow);
+                Student s = students.get(selectedRow);
                 dayTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.DAY_OF_MONTH)));
-                monthTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.MONTH)));
+                monthTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.MONTH) + 1));
                 yearTextBox.setText(String.valueOf(s.DateOfBirth.get(Calendar.YEAR)));
             }
             mathScoreTextBox.setText(table.getValueAt(selectedRow, 4).toString());
@@ -207,18 +227,33 @@ public class MainFrame extends JFrame implements Observer
     }
     private void handleButtonCreateClickEvent(ActionEvent e)
     {
-        students.add(createStudentByTextBoxes());
-        //handleButtonDropSelectionClickEvent(e);
-        table.setRowSelectionInterval(students.size() - 1, students.size() - 1);
+        try
+        {
+            students.add(createStudentByTextBoxes());
+            table.setRowSelectionInterval(students.size() - 1, students.size() - 1);
+        }
+        catch (Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Произошла ошибка.",
+                    "Предупреждение", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     private void handleButtonEditClickEvent(ActionEvent e)
     {
-        var index = table.getSelectedRow();
-        students.set(index,createStudentByTextBoxes());
+        try
+        {
+            int index = table.getSelectedRow();
+            students.set(index, createStudentByTextBoxes());
+        }
+        catch (Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Произошла ошибка.",
+                    "Предупреждение", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     private void handleButtonDeleteClickEvent(ActionEvent e)
     {
-        var index = table.getSelectedRow();
+        int index = table.getSelectedRow();
         students.remove(index);
         table.updateUI();
     }
@@ -236,26 +271,10 @@ public class MainFrame extends JFrame implements Observer
         yearTextBox.setText("");
     }
     //endregion
-    private Student createStudentByTextBoxes()
-    {
-        var student = new Student();
-        student.FirstName = firstNameTextBox.getText();
-        student.LastName = lastNameTextBox.getText();
-        student.Patronymic = patronymicTextBox.getText();
-        student.MathScore = Integer.parseInt(mathScoreTextBox.getText());
-        student.PhysicsScore = Integer.parseInt(physicsScoreTextBox.getText());
-        student.RussianScore = Integer.parseInt(russianScoreTextBox.getText());
-        var day = Integer.parseInt(dayTextBox.getText());
-        var month = Integer.parseInt(monthTextBox.getText());
-        var year = Integer.parseInt(yearTextBox.getText());
-        student.DateOfBirth = new GregorianCalendar(year,month - 1,day);
-
-        return student;
-    }
     //region UI_CREATION
     private JPanel createFileButtonsPanel()
     {
-        var panel = new JPanel(null);
+        JPanel panel = new JPanel(null);
 
         Icon saveIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\floppy-disk.png");
         Icon openIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\folders.png");
@@ -291,7 +310,7 @@ public class MainFrame extends JFrame implements Observer
     }
     private JPanel createLogPanel()
     {
-        var panel = new JPanel(null);
+        JPanel panel = new JPanel(null);
         logArea = new JTextArea();
         logArea.setEditable(false);
         logArea.setBackground(new Color(0, 9, 114));
@@ -308,13 +327,13 @@ public class MainFrame extends JFrame implements Observer
     }
     private JPanel createSortPanel()
     {
-        var panel = new JPanel(null);
+        JPanel panel = new JPanel(null);
 
         Icon sortIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\funnel-simple.png");
 
         sortButton = new JButton("Сортировать");
         sortComboBox = new JComboBox(Sort.values());
-        var sortLabel = new JLabel("Сортировать \n по:");
+        JLabel sortLabel = new JLabel("Сортировать \n по:");
 
         sortLabel.setBounds(10,5,200,25);
         sortComboBox.setBounds(10,35,200,25);
@@ -335,7 +354,7 @@ public class MainFrame extends JFrame implements Observer
     }
     private JPanel createButtonsPanel()
     {
-        var panel = new JPanel(null);
+        JPanel panel = new JPanel(null);
 
         Icon createIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\plus-square.png");
         Icon editIcon = new ImageIcon("D:\\CourseProjectJAVA\\src\\Images\\edit (1).png");
@@ -373,16 +392,16 @@ public class MainFrame extends JFrame implements Observer
     }
     private JPanel createInputScorePanel()
     {
-        var panel = new JPanel(null);
+        JPanel panel = new JPanel(null);
 
         mathScoreTextBox = new JTextField(3);
         russianScoreTextBox = new JTextField(3);
         physicsScoreTextBox = new JTextField(3);
         dropSelectionButton = new JButton("Сбросить выделение");
 
-        var mathScoreLabel = new JLabel("Математика");
-        var russianScoreLabel = new JLabel("Русский");
-        var physicsScoreLabel = new JLabel("Физика");
+        JLabel mathScoreLabel = new JLabel("Математика");
+        JLabel russianScoreLabel = new JLabel("Русский");
+        JLabel physicsScoreLabel = new JLabel("Физика");
 
         mathScoreTextBox.setBounds(5,5,50,20);
         russianScoreTextBox.setBounds(5,30,50,20);
@@ -410,7 +429,7 @@ public class MainFrame extends JFrame implements Observer
     }
     private JPanel createInputInitialsPanel()
     {
-        var panel = new JPanel(null);
+        JPanel panel = new JPanel(null);
 
         firstNameTextBox = new JTextField(25);
         lastNameTextBox = new JTextField(25);
@@ -420,13 +439,13 @@ public class MainFrame extends JFrame implements Observer
         monthTextBox = new JTextField(4);
         yearTextBox = new JTextField(4);
 
-        var firstNameLabel = new JLabel("Имя");
-        var lastNameLabel = new JLabel("Фамилия");
-        var patronymicLabel = new JLabel("Отчество");
+        JLabel firstNameLabel = new JLabel("Имя");
+        JLabel lastNameLabel = new JLabel("Фамилия");
+        JLabel patronymicLabel = new JLabel("Отчество");
 
-        var dayLabel = new JLabel("День");
-        var monthLabel = new JLabel("Месяц");
-        var yearLabel = new JLabel("Год");
+        JLabel dayLabel = new JLabel("День");
+        JLabel monthLabel = new JLabel("Месяц");
+        JLabel yearLabel = new JLabel("Год");
 
         lastNameTextBox.setBounds(5,5,200,25);
         firstNameTextBox.setBounds(5,35,200,25);
@@ -489,36 +508,42 @@ public class MainFrame extends JFrame implements Observer
     }
     private JMenu createFileMenuBar()
     {
-        var fileMenu = new JMenu("Файл");
+        JMenu fileMenu = new JMenu("Файл");
 
         newMenuItem = new JMenuItem("Новый");
         openMenuItem = new JMenuItem("Открыть");
         saveMenuItem = new JMenuItem("Сохранить");
         saveAsMenuItem = new JMenuItem("Сохранить как...");
+        exitMenuItem = new JMenuItem("Выход");
 
 
         fileMenu.add(newMenuItem);
         fileMenu.add(openMenuItem);
         fileMenu.add(saveMenuItem);
         fileMenu.add(saveAsMenuItem);
+        fileMenu.add(exitMenuItem);
 
         return fileMenu;
     }
     private JMenu createHelpMenuBar()
     {
-        var helpMenu = new JMenu("Помощь");
+        JMenu helpMenu = new JMenu("Помощь");
 
-        var helpButton = new JMenuItem("Помощь");
-        var aboutAuthorButton = new JMenuItem("Об авторе");
-        var aboutProgramButton = new JMenuItem("О программе");
+        aboutAuthorButton = new JMenuItem("Об авторе");
+        aboutProgramButton = new JMenuItem("О программе");
 
-        helpMenu.add(helpButton);
         helpMenu.add(aboutAuthorButton);
         helpMenu.add(aboutProgramButton);
 
         return helpMenu;
     }
     //endregion
+    /**<b>Override of interface method</b>
+     * If Update called and initiator of event is a {@link ObservableList} then calls updating of table.
+     * Record a action to a log panel.
+     * @param message
+     *        A {@link Message} class object contains initiator object, info and time of action fired
+    */
     @Override
     public void Update(Message message)
     {
@@ -527,7 +552,7 @@ public class MainFrame extends JFrame implements Observer
         {
             table.updateUI();
         }
-        var msg = message.getInfo();
+        String msg = message.getInfo();
         if(message.getAction() != null)
         {
             logArea.append(sdf.format(message.getActionTime()) + msg +"\n");

@@ -1,5 +1,15 @@
 package model.enums;
 
+import model.abstractions.Observable;
+
+import java.util.ArrayList;
+
+/**
+ *<strong>Actions</strong>
+ * - enum with actions and text information about them.
+ * @author Nikita Bodry
+ * @version 1.0
+ */
 public enum Actions
 {
     ITEM_ADDED("Добавлен объект"),

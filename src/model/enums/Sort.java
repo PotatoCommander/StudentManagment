@@ -1,5 +1,11 @@
 package model.enums;
-
+/**
+ *<strong>Sort</strong>
+ * - enum with types of sort and text description in russian.
+ *  Used for choosing sort method and displaying in comboboxes.
+ * @author Nikita Bodry
+ * @version 1.0
+ */
 public enum Sort
 {
     FIRST_NAME("Имя"),

@@ -6,9 +6,18 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public
-class SplashFrame extends JFrame
+/**
+ *<strong>SplashFrame extends JFrame</strong>
+ *
+ * <i>Implementation of parent class JFrame contains title info</i>
+ *
+ * @author Nikita Bodry
+ * @version 1.0
+ */
+public class SplashFrame extends JFrame
 {
 
     public SplashFrame(String headerText)
@@ -30,20 +39,21 @@ class SplashFrame extends JFrame
 
         jbtStart.setBounds(80, 500, 285, 30);
         jbtExit.setBounds(410, 500, 285, 30);
-        iconLabel.setSize(800, 600);
+        iconLabel.setBounds(80,240,200,200);
 
 
         try
         {
-            BufferedImage image = ImageIO.read(new File("Student.jpg"));
-            ImageIcon icon = new ImageIcon(image.getScaledInstance(180, 180, Image.SCALE_SMOOTH));
+            BufferedImage image = ImageIO.read(new File("D:\\CourseProjectJAVA\\src\\Images\\college-class.png"));
+            ImageIcon icon = new ImageIcon(image.getScaledInstance(200, 200, Image.SCALE_SMOOTH));
             iconLabel.setIcon(icon);
         } catch (IOException ex)
         {
             System.out.println(ex.getMessage());
         }
 
-        jbtStart.addActionListener(e -> {
+        jbtStart.addActionListener(e ->
+        {
             dispose();
             new MainFrame("Формирование списка абитуриентов");
         });
@@ -51,8 +61,21 @@ class SplashFrame extends JFrame
         add(new myComponent());
 
         setVisible(true);
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask()
+                       {
+                           @Override
+                           public void run() {
+                               dispose();
+                               timer.cancel();
+                           }
+                       }, 60000);
     }
-
+    /**
+     *<strong>Child class myComponent, which is inherited from the class JComponent</strong>
+     *
+     * <i>In this class implemented component for {@link SplashFrame}</i>
+     */
     class myComponent extends JComponent
     {
         @Override
@@ -80,7 +103,7 @@ class SplashFrame extends JFrame
 
             Font font4 = new Font("TimesRoman", Font.BOLD, 16);
             g.setFont(font4);
-            g.drawString(" По дисциплине 'Программирование на Java' ", 210, 165);
+            g.drawString(" По дисциплине 'Программирование на языке Java' ", 210, 165);
 
         }
     }

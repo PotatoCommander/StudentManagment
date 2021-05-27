@@ -5,9 +5,20 @@ import model.enums.Adapters;
 import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
+/**
+ *<strong>KeyAdapterFactory</strong>
+ * Static class factory for getting adapters by {@link Adapters} enum
+ * @author Nikita Bodry
+ * @version 1.0
+ */
 public class KeyAdapterFactory
 {
+    /**Returns adapter with date input restriction.
+     *
+     * @return  {@link KeyAdapter} inheritor with overrided keyTyped method.
+     * @param adapterType
+     *          Type of adapter ({@link Adapters} enum).
+     */
     public static KeyAdapter getDateRestrictedAdapter(Adapters adapterType)
     {
         KeyAdapter adapter;
@@ -23,6 +34,12 @@ public class KeyAdapterFactory
                 throw new IllegalStateException("Unexpected value: " + adapterType);
         }
     }
+    /**Returns adapter with restriction by number of digits.
+     *
+     * @return  {@link KeyAdapter} inheritor with overrided keyTyped method.
+     * @param numberOfDigits
+     *          Max number of digits in text field.
+     */
     public static KeyAdapter getDigitsRestrictedAdapter(int numberOfDigits)
     {
         return new KeyAdapter()
@@ -31,7 +48,7 @@ public class KeyAdapterFactory
             public void keyTyped(KeyEvent e)
             {
                 char c = e.getKeyChar();
-                var length = ((JTextField)e.getSource()).getText().length();
+                int length = ((JTextField)e.getSource()).getText().length();
                 if (!Character.isDigit(c) || length >= numberOfDigits) { e.consume();}
             }
         };
@@ -42,8 +59,8 @@ public class KeyAdapterFactory
         public void keyTyped(KeyEvent e)
         {
             char c = e.getKeyChar();
-            var text = ((JTextField)e.getSource()).getText();
-            var length = text.length();
+            String  text = ((JTextField)e.getSource()).getText();
+            int length = text.length();
             switch (length)
             {
                 case 0:
@@ -71,8 +88,8 @@ public class KeyAdapterFactory
                 e.consume();
                 return;
             }
-            var text = ((JTextField)e.getSource()).getText();
-            var length = text.length();
+            String text = ((JTextField)e.getSource()).getText();
+            int length = text.length();
             switch (length)
             {
                 case 0:

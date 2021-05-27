@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="CourseProjectJAVA:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/CourseProjectJAVA_jar</output-path>
+    <root id="archive" name="CourseProjectJAVA.jar">
+      <element id="module-output" name="CourseProjectJAVA" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/commons-csv-1.8-bin/commons-csv-1.8/commons-csv-1.8.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
